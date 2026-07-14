@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>WA Bot</title>
+<link rel="icon" href="/favicon.ico">
+<script src="/socket.io/socket.io.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --r:10px;--rl:18px;--rx:24px;
+  --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+  --ease:cubic-bezier(.4,0,.2,1);--spring:cubic-bezier(.34,1.56,.64,1);
+  --tr:.18s var(--ease);--sb:264px;
+}
+[data-theme="dark"]{
+  --bg:#08090c;--sur:#0e1015;--card:#13151d;--card2:#1a1d27;--card3:#21253280;
+  --bd:rgba(255,255,255,.055);--bd2:rgba(255,255,255,.1);--bd3:rgba(255,255,255,.16);
+  --tx:#eef2f7;--tx2:#8b95a8;--tx3:#4a5368;
+  --gr:#10b981;--gr2:#34d399;--gr-s:rgba(16,185,129,.15);--gr-g:rgba(16,185,129,.3);
+  --am:#f59e0b;--am-s:rgba(245,158,11,.13);
+  --re:#f43f5e;--re-s:rgba(244,63,94,.12);
+  --bl:#6366f1;--bl-s:rgba(99,102,241,.12);
+  --pu:#a855f7;--pu-s:rgba(168,85,247,.12);
+  --cy:#06b6d4;
+  --glass:rgba(255,255,255,.03);
+}
+[data-theme="light"]{
+  --bg:#f0f2f7;--sur:#fff;--card:#fff;--card2:#f5f7fc;--card3:#edf0f880;
+  --bd:rgba(0,0,0,.06);--bd2:rgba(0,0,0,.1);--bd3:rgba(0,0,0,.16);
+  --tx:#0d1117;--tx2:#4a5568;--tx3:#94a3b8;
+  --gr:#059669;--gr2:#10b981;--gr-s:rgba(5,150,105,.1);--gr-g:rgba(5,150,105,.25);
+  --am:#d97706;--am-s:rgba(217,119,6,.1);
+  --re:#e11d48;--re-s:rgba(225,29,72,.1);
+  --bl:#4f46e5;--bl-s:rgba(79,70,229,.1);
+  --pu:#9333ea;--pu-s:rgba(147,51,234,.1);
+  --cy:#0891b2;
+  --glass:rgba(255,255,255,.6);
+}
+
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--tx);-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px}
+
+.app{display:grid;grid-template-areas:"side main";grid-template-columns:var(--sb) 1fr;height:100vh;overflow:hidden}
+
+.sidebar{grid-area:side;background:var(--sur);border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden;transition:background .3s,border-color .3s;position:relative}
+.sidebar::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gr-g),transparent);opacity:.6;pointer-events:none}
+
+.sb-head{display:flex;align-items:center;justify-content:space-between;padding:18px 16px 16px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.logo{display:flex;align-items:center;gap:10px;user-select:none}
+.logo-mark{width:32px;height:32px;border-radius:10px;flex-shrink:0;background:linear-gradient(135deg,#059669 0%,#10b981 50%,#34d399 100%);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 0 var(--gr-g);animation:markPulse 3s ease-in-out infinite;position:relative;overflow:hidden}
+.logo-mark::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.2),transparent)}
+@keyframes markPulse{0%,100%{box-shadow:0 0 0 0 var(--gr-g),0 2px 8px var(--gr-s)}50%{box-shadow:0 0 0 6px transparent,0 4px 16px var(--gr-s)}}
+.logo-mark svg{width:17px;height:17px;position:relative;z-index:1}
+.logo-txt{font-size:15px;font-weight:700;letter-spacing:-.04em}
+.logo-txt em{color:var(--gr);font-style:normal}
+.logo-txt small{font-size:9px;font-weight:500;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;display:block;margin-top:-2px}
+
+.tt-btn{width:36px;height:36px;border-radius:11px;border:1px solid var(--bd2);background:var(--card2);cursor:pointer;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:border-color var(--tr),background var(--tr),transform .15s var(--spring),box-shadow var(--tr);position:relative}
+.tt-btn:hover{border-color:var(--bd3);background:var(--bd2);transform:scale(1.08);box-shadow:0 0 0 3px var(--gr-s)}
+.tt-btn:active{transform:scale(.9)}
+.tt-track{position:relative;width:20px;height:20px}
+.tt-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;transition:transform .45s var(--spring),opacity .3s var(--ease)}
+.tt-moon{opacity:1;transform:rotate(0deg) scale(1)}
+.tt-sun{opacity:0;transform:rotate(90deg) scale(.4)}
+[data-theme="light"] .tt-moon{opacity:0;transform:rotate(-100deg) scale(.4)}
+[data-theme="light"] .tt-sun{opacity:1;transform:rotate(0deg) scale(1)}
+.tt-btn svg{width:15px;height:15px;stroke:var(--tx2);transition:stroke var(--tr)}
+.tt-btn:hover svg{stroke:var(--tx)}
+
+.sb-chip{margin:10px 12px 0;padding:10px 12px;border-radius:var(--r);background:var(--card2);border:1px solid var(--bd);display:flex;align-items:center;gap:9px;transition:background .3s,border-color .3s}
+.pulse{width:9px;height:9px;border-radius:50%;flex-shrink:0;transition:background .3s,box-shadow .3s}
+.pulse.ready{background:var(--gr);animation:pReady 2.5s ease-in-out infinite}
+.pulse.qr{background:var(--am);animation:pBlink .9s ease-in-out infinite}
+.pulse.starting{background:var(--bl);animation:pBlink 1.2s ease-in-out infinite}
+.pulse.disconnected{background:var(--re)}
+@keyframes pReady{0%,100%{box-shadow:0 0 0 0 var(--gr-g)}60%{box-shadow:0 0 0 7px transparent}}
+@keyframes pBlink{0%,100%{opacity:1}50%{opacity:.18}}
+.chip-info{flex:1;min-width:0}
+.chip-who{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip-lbl{font-size:10px;color:var(--tx2);margin-top:1px}
+
+.sb-body{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:22px;min-height:0}
+/* Busy mode toggle */
+.busy-toggle{
+  margin:10px 12px 0;padding:11px 13px;border-radius:var(--r);
+  background:var(--card2);border:1px solid var(--bd);
+  display:flex;align-items:center;gap:10px;cursor:pointer;
+  transition:background .25s,border-color .25s;user-select:none;
+}
+.busy-toggle:hover{border-color:var(--bd2)}
+.busy-toggle.on{background:var(--am-s);border-color:rgba(245,158,11,.4)}
+.busy-ic{
+  width:30px;height:30px;border-radius:9px;flex-shrink:0;
+  background:var(--bd);display:flex;align-items:center;justify-content:center;
+  color:var(--tx2);transition:background .25s,color .25s;
+}
+.busy-ic svg{width:15px;height:15px}
+.busy-toggle.on .busy-ic{background:var(--am);color:#fff}
+.busy-info{flex:1;min-width:0}
+.busy-ttl{font-size:12px;font-weight:600;color:var(--tx)}
+.busy-sub{font-size:10px;color:var(--tx3);margin-top:1px}
+.busy-toggle.on .busy-sub{color:var(--am)}
+.busy-sw{
+  width:38px;height:22px;border-radius:20px;background:var(--bd2);
+  flex-shrink:0;position:relative;transition:background .25s;
+}
+.busy-toggle.on .busy-sw{background:var(--am)}
+.busy-sw::after{
+  content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;
+  border-radius:50%;background:#fff;transition:transform .25s var(--spring);
+  box-shadow:0 1px 3px rgba(0,0,0,.3);
+}
+.busy-toggle.on .busy-sw::after{transform:translateX(16px)}
+
+/* Driving mode toggle — blue/cyan theme to distinguish from busy (amber) */
+.drive-toggle{
+  margin:8px 12px 0;padding:11px 13px;border-radius:var(--r);
+  background:var(--card2);border:1px solid var(--bd);
+  display:flex;align-items:center;gap:10px;cursor:pointer;
+  transition:background .25s,border-color .25s;user-select:none;
+}
+.drive-toggle:hover{border-color:var(--bd2)}
+.drive-toggle.on{background:var(--bl-s);border-color:rgba(99,102,241,.4)}
+.drive-ic{
+  width:30px;height:30px;border-radius:9px;flex-shrink:0;
+  background:var(--bd);display:flex;align-items:center;justify-content:center;
+  color:var(--tx2);transition:background .25s,color .25s;
+}
+.drive-ic svg{width:16px;height:16px}
+.drive-toggle.on .drive-ic{background:var(--bl);color:#fff}
+.drive-info{flex:1;min-width:0}
+.drive-ttl{font-size:12px;font-weight:600;color:var(--tx)}
+.drive-sub{font-size:10px;color:var(--tx3);margin-top:1px}
+.drive-toggle.on .drive-sub{color:var(--bl)}
+.drive-sw{
+  width:38px;height:22px;border-radius:20px;background:var(--bd2);
+  flex-shrink:0;position:relative;transition:background .25s;
+}
+.drive-toggle.on .drive-sw{background:var(--bl)}
+.drive-sw::after{
+  content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;
+  border-radius:50%;background:#fff;transition:transform .25s var(--spring);
+  box-shadow:0 1px 3px rgba(0,0,0,.3);
+}
+.drive-toggle.on .drive-sw::after{transform:translateX(16px)}
+
+/* Activity input — appears under driving toggle when active */
+.drive-activity{
+  margin:6px 12px 0;overflow:hidden;
+  max-height:0;opacity:0;transition:max-height .3s var(--ease),opacity .25s,margin .3s;
+}
+.drive-activity.show{max-height:80px;opacity:1;margin:8px 12px 0}
+.drive-activity-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3);margin-bottom:5px;padding-left:2px}
+.drive-activity-row{display:flex;gap:6px}
+.drive-activity input{
+  flex:1;min-width:0;padding:8px 11px;font-size:12px;font-family:var(--font);
+  background:var(--card2);border:1px solid var(--bd2);border-radius:9px;color:var(--tx);
+  outline:none;transition:border-color .2s;
+}
+.drive-activity input:focus{border-color:var(--bl)}
+.drive-activity input::placeholder{color:var(--tx3)}
+.drive-activity-save{
+  padding:8px 12px;border-radius:9px;border:1px solid var(--bl);background:var(--bl-s);
+  color:var(--bl);font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0;
+  transition:background .15s,transform .12s var(--spring);
+}
+.drive-activity-save:hover{background:var(--bl);color:#fff;transform:scale(1.04)}
+.drive-activity-save:active{transform:scale(.94)}
+
+.sec{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--tx3);margin-bottom:9px;display:flex;align-items:center;gap:6px}
+.sec::after{content:'';flex:1;height:1px;background:var(--bd)}
+
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.sc{background:var(--card2);border:1px solid var(--bd);border-radius:var(--r);padding:13px 10px;text-align:center;cursor:default;transition:transform var(--tr),border-color var(--tr),box-shadow var(--tr),background var(--tr);position:relative;overflow:hidden}
+.sc::before{content:'';position:absolute;inset:0;background:var(--glass);pointer-events:none}
+.sc:hover{transform:translateY(-2px);border-color:var(--bd2);box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.sc-n{font-size:26px;font-weight:700;font-family:var(--mono);line-height:1;transition:transform .2s var(--spring)}
+.sc:hover .sc-n{transform:scale(1.1)}
+.sc-l{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--tx3);margin-top:3px}
+
+.ql{display:flex;flex-direction:column;gap:6px}
+.qe{font-size:12px;color:var(--tx3);text-align:center;padding:14px 0}
+/* Default queue card (safe / first third) — green glowing border, no blink */
+.qc{
+  background:var(--card2);
+  border:1px solid rgba(16,185,129,.35);
+  border-left:3px solid var(--gr);
+  border-radius:var(--r);
+  padding:10px 11px 8px;
+  animation:slideIn .2s var(--ease);
+  transition:border-color .35s ease, box-shadow .35s ease, background .35s ease;
+  box-shadow:0 0 10px rgba(16,185,129,.08);
+}
+/* Warn (second third) — amber/yellow */
+.qc.warn{
+  border:1px solid rgba(245,158,11,.4);
+  border-left:3px solid var(--am);
+  box-shadow:0 0 10px rgba(245,158,11,.1);
+}
+/* Critical (last third) — red */
+.qc.crit{
+  border:1px solid rgba(244,63,94,.4);
+  border-left:3px solid var(--re);
+  box-shadow:0 0 10px rgba(244,63,94,.12);
+}
+.qr2{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:4px}
+.qn{font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.qright{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.qt{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--gr);flex-shrink:0;transition:color .3s}
+.qt.warn{color:var(--am)}
+.qt.crit{color:var(--re)}
+.qcancel{width:22px;height:22px;border-radius:6px;background:var(--re-s);border:1px solid rgba(244,63,94,.2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--re);flex-shrink:0;transition:background .15s,transform .12s var(--spring),border-color .15s}
+.qcancel svg{width:11px;height:11px}
+.qcancel:hover{background:var(--re);color:#fff;transform:scale(1.12);border-color:var(--re)}
+.qcancel:active{transform:scale(.88)}
+.qcancel:disabled,.qcancel.loading{opacity:.5;pointer-events:none}
+.qm{font-size:10px;color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:7px}
+.qtr{height:3px;background:var(--bd);border-radius:3px;overflow:hidden}
+.qf{height:100%;border-radius:3px;transition:background .5s}
+
+.sb-foot{padding:10px 12px 16px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:7px;flex-shrink:0}
+.out-btn{width:100%;padding:9px 12px;border-radius:var(--r);background:var(--re-s);border:1px solid rgba(244,63,94,.22);color:var(--re);font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer;transition:var(--tr);display:flex;align-items:center;justify-content:center;gap:7px}
+.out-btn:hover{background:rgba(244,63,94,.2);transform:translateY(-1px);box-shadow:0 4px 14px rgba(244,63,94,.18)}
+.out-btn:active{transform:scale(.98)}
+.sb-cfg{font-family:var(--mono);font-size:10px;color:var(--tx3);display:flex;flex-direction:column;gap:2px}
+.sb-cfg span{color:var(--gr)}
+
+.main{grid-area:main;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);position:relative;transition:background .3s}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 22px;height:56px;border-bottom:1px solid var(--bd);background:var(--sur);flex-shrink:0;transition:background .3s,border-color .3s}
+.tb-l{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600}
+.live{display:flex;align-items:center;gap:5px;background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.22);padding:3px 8px;border-radius:20px}
+.ldot{width:5px;height:5px;border-radius:50%;background:var(--re);animation:pBlink .7s infinite}
+.ltxt{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--re)}
+.tb-r{display:flex;align-items:center;gap:7px}
+.tb-divider{width:1px;height:20px;background:var(--bd2);margin:0 3px;flex-shrink:0}
+.ec{font-size:12px;color:var(--tx3);font-family:var(--mono);margin-left:3px;white-space:nowrap}
+
+.tt-btn-mob{display:none;width:34px;height:34px;border-radius:10px;border:1px solid var(--bd2);background:var(--card2);cursor:pointer;overflow:hidden;align-items:center;justify-content:center;transition:border-color var(--tr),background var(--tr),transform .15s var(--spring);position:relative}
+.tt-btn-mob:hover{border-color:var(--bd3);transform:scale(1.06)}
+.tt-btn-mob:active{transform:scale(.92)}
+.tt-btn-mob .tt-track{width:18px;height:18px}
+.tt-btn-mob svg{width:14px;height:14px;stroke:var(--tx2);transition:stroke var(--tr)}
+.tt-btn-mob:hover svg{stroke:var(--tx)}
+@media(max-width:700px){.tt-btn-mob{display:flex}}
+
+.feed{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:6px}
+.empty{margin:auto;text-align:center;color:var(--tx3);display:flex;flex-direction:column;align-items:center;gap:14px}
+.empty-ic{font-size:44px;animation:floatIc 3s ease-in-out infinite;filter:grayscale(.3)}
+@keyframes floatIc{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-8px) rotate(2deg)}}
+.empty-tx{font-size:13px;line-height:1.7;opacity:.6;max-width:200px}
+
+.ev{display:grid;grid-template-columns:40px 1fr auto;gap:11px;align-items:start;background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:12px 14px;animation:slideIn .22s var(--ease);cursor:pointer;transition:border-color var(--tr),transform var(--tr),box-shadow var(--tr),background var(--tr);position:relative;overflow:hidden;flex-shrink:0;min-height:0}
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.ev::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;transition:width .2s var(--ease)}
+.ev:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.1);border-color:var(--bd2)}
+.ev:hover::before{width:4px}
+.ev:active{transform:scale(.998)}
+
+.ev.incoming{border-left:3px solid var(--bl)}.ev.incoming::before{background:var(--bl)}
+.ev.ai_reply{border-left:3px solid var(--gr);background:linear-gradient(135deg,var(--card),var(--gr-s))}.ev.ai_reply::before{background:var(--gr)}
+.ev.human_reply{border-left:3px solid var(--pu)}.ev.human_reply::before{background:var(--pu)}
+.ev.skipped{border-left:3px solid var(--tx3);opacity:.58}.ev.skipped::before{background:var(--tx3)}
+.ev.error{border-left:3px solid var(--re);background:linear-gradient(135deg,var(--card),var(--re-s))}.ev.error::before{background:var(--re)}
+.ev.system{border-left:3px solid var(--am)}.ev.system::before{background:var(--am)}
+
+.ev-av{width:40px;height:40px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;background:var(--card2);transition:transform .2s var(--spring)}
+.ev:hover .ev-av{transform:scale(1.1) rotate(-3deg)}
+.ev.incoming .ev-av{background:var(--bl-s)}
+.ev.ai_reply .ev-av{background:var(--gr-s)}
+.ev.human_reply .ev-av{background:var(--pu-s)}
+.ev.error .ev-av{background:var(--re-s)}
+.ev.system .ev-av{background:var(--am-s)}
+
+.ev-sender{font-size:12px;font-weight:600;margin-bottom:3px}
+.ev.incoming .ev-sender{color:var(--bl)}
+.ev.ai_reply .ev-sender{color:var(--gr)}
+.ev.human_reply .ev-sender{color:var(--pu)}
+.ev.skipped .ev-sender{color:var(--tx2)}
+.ev.error .ev-sender{color:var(--re)}
+.ev.system .ev-sender{color:var(--am)}
+.ev-txt{font-size:11px;color:var(--tx2);line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+
+.ev-side{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.ev-ts{font-family:var(--mono);font-size:10px;color:var(--tx3);white-space:nowrap}
+.ev-arr{font-size:15px;color:var(--tx3);transition:transform .2s var(--spring),color .2s}
+.ev:hover .ev-arr{transform:translateX(3px);color:var(--tx2)}
+
+.ovl{position:fixed;inset:0;z-index:100;background:rgba(5,6,10,.75);backdrop-filter:blur(16px) saturate(1.4);display:none;align-items:center;justify-content:center;padding:20px}
+.ovl.on{display:flex;animation:fadeBg .18s var(--ease)}
+@keyframes fadeBg{from{opacity:0}to{opacity:1}}
+
+.mbox{background:var(--sur);border:1px solid var(--bd2);border-radius:var(--rl);box-shadow:0 40px 100px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.04);animation:popIn .24s var(--spring);max-height:calc(100vh - 40px);overflow-y:auto;position:relative;transition:background .3s,border-color .3s}
+@keyframes popIn{from{opacity:0;transform:scale(.86) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+
+.mc{position:absolute;top:13px;right:13px;width:28px;height:28px;border-radius:8px;background:var(--card2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--tx2);font-size:14px;transition:var(--tr);z-index:1}
+.mc:hover{background:var(--bd2);color:var(--tx);transform:scale(1.08)}
+.mc:active{transform:scale(.92)}
+
+#qrOvl .mbox{max-width:340px;width:100%;padding:32px;display:flex;flex-direction:column;align-items:center;gap:18px}
+.qr-frame{background:#fff;padding:14px;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.2)}
+.qr-frame img{display:block;width:190px;height:190px}
+.qr-h{font-size:18px;font-weight:700;letter-spacing:-.03em}
+.qr-steps{width:100%;display:flex;flex-direction:column;gap:9px}
+.qr-s{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--tx2)}
+.qr-n{width:21px;height:21px;border-radius:50%;background:var(--gr-s);color:var(--gr);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+#evOvl .mbox{max-width:480px;width:100%;padding:0;overflow:hidden}
+.ev-modal-top{padding:20px 20px 16px;border-bottom:1px solid var(--bd)}
+.ev-modal-accent{height:4px;border-radius:4px 4px 0 0;position:absolute;top:0;left:0;right:0}
+.ev-modal-hd{display:flex;align-items:center;gap:13px;margin-top:4px}
+.ev-modal-av{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.ev-modal-name{font-size:17px;font-weight:700;letter-spacing:-.03em;margin-bottom:5px}
+.ev-modal-badge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 9px;border-radius:20px;display:inline-flex}
+.ev-modal-body{padding:16px 20px}
+.ev-modal-msg{background:var(--card2);border:1px solid var(--bd);border-radius:var(--r);padding:14px;font-size:13px;line-height:1.7;word-break:break-word;color:var(--tx);margin-bottom:14px;white-space:pre-wrap}
+.ev-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ev-modal-cell{background:var(--card2);border:1px solid var(--bd);border-radius:9px;padding:11px 13px}
+.ev-modal-cl{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--tx3);margin-bottom:4px}
+.ev-modal-cv{font-size:12px;font-weight:600;font-family:var(--mono);color:var(--tx)}
+
+#cfOvl .mbox,#bkConfirmOvl .mbox{max-width:370px;width:100%;padding:36px 28px;display:flex;flex-direction:column;align-items:center;gap:14px}
+#bkConfirmOvl .cf-ic{font-size:42px;color:var(--re);width:64px;height:64px;border-radius:18px;background:var(--re-s);display:flex;align-items:center;justify-content:center}
+#bkConfirmOvl .cf-ic svg{width:32px;height:32px}
+#bkConfirmOvl .cbtn.ok{background:var(--re)}
+#bkConfirmOvl .cf-target{font-size:13px;font-weight:700;color:var(--re);background:var(--re-s);padding:6px 12px;border-radius:8px;font-family:var(--mono);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cf-ic{font-size:44px;animation:floatIc 2s ease-in-out infinite}
+.cf-tt{font-size:20px;font-weight:700;letter-spacing:-.03em}
+.cf-dc{font-size:13px;color:var(--tx2);text-align:center;line-height:1.7;max-width:290px}
+.cf-bx{display:flex;gap:9px;margin-top:6px;width:100%}
+.cbtn{flex:1;padding:11px;border-radius:var(--r);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;border:none;transition:var(--tr)}
+.cbtn:active{transform:scale(.96)}
+.cbtn.cancel{background:var(--card2);border:1px solid var(--bd2);color:var(--tx2)}
+.cbtn.cancel:hover{background:var(--bd2);color:var(--tx)}
+.cbtn.ok{background:var(--re);color:#fff;box-shadow:0 0 0 0 var(--re-s)}
+.cbtn.ok:hover{filter:brightness(1.12);box-shadow:0 6px 18px rgba(244,63,94,.3)}
+
+.clear-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;border:1px solid var(--bd2);background:var(--card2);cursor:pointer;flex-shrink:0;overflow:hidden;position:relative;transition:border-color var(--tr),background var(--tr),transform .15s var(--spring)}
+.clear-btn:hover{border-color:var(--bd3);background:var(--bd2);transform:scale(1.06)}
+.clear-btn:active{transform:scale(.92)}
+.clear-btn svg{width:14px;height:14px;stroke:var(--tx2);transition:stroke var(--tr),transform .3s var(--spring)}
+.clear-btn:hover svg{stroke:var(--tx);transform:rotate(-12deg)}
+.clear-btn.success{background:var(--gr-s);border-color:rgba(16,185,129,.4)}
+.clear-btn.success svg{stroke:var(--gr);animation:spinOnce .5s var(--spring)}
+@keyframes spinOnce{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+/* Block button in topbar — same shape as clear */
+.block-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;border:1px solid var(--bd2);background:var(--card2);cursor:pointer;flex-shrink:0;position:relative;transition:border-color var(--tr),background var(--tr),transform .15s var(--spring)}
+.block-btn:hover{border-color:var(--bd3);background:var(--bd2);transform:scale(1.06)}
+.block-btn:active{transform:scale(.92)}
+.block-btn svg{width:14px;height:14px;stroke:var(--tx2);transition:stroke var(--tr)}
+.block-btn:hover svg{stroke:var(--tx)}
+.block-btn-badge{
+  position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;padding:0 4px;
+  border-radius:8px;background:var(--re);color:#fff;font-size:9px;font-weight:700;font-family:var(--mono);
+  display:flex;align-items:center;justify-content:center;border:2px solid var(--sur);
+}
+
+/* Block button in event card (inline next to sender name) */
+.ev-block-btn{
+  width:22px;height:22px;border-radius:6px;
+  background:var(--re-s);border:1px solid rgba(244,63,94,.2);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--re);flex-shrink:0;margin-left:6px;
+  transition:background .15s,transform .12s var(--spring),border-color .15s,opacity .15s;
+  opacity:0;
+}
+.ev:hover .ev-block-btn{opacity:1}
+.ev-block-btn svg{width:11px;height:11px}
+.ev-block-btn:hover{background:var(--re);color:#fff;transform:scale(1.12);border-color:var(--re)}
+.ev-block-btn:active{transform:scale(.88)}
+/* On touch devices and mobile: always show the block button (no hover available) */
+@media(hover:none),(max-width:700px){
+  .ev-block-btn{opacity:1}
+}
+
+/* Blocked modal */
+#bkOvl .mbox{max-width:440px;width:100%;padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:70vh}
+.bk-head{padding:20px 22px 14px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:11px}
+.bk-icon{width:38px;height:38px;border-radius:11px;background:var(--re-s);display:flex;align-items:center;justify-content:center;color:var(--re);flex-shrink:0}
+.bk-icon svg{width:18px;height:18px}
+.bk-ttl{font-size:16px;font-weight:700;letter-spacing:-.02em}
+.bk-sub{font-size:11px;color:var(--tx3);margin-top:2px}
+.bk-body{flex:1;overflow-y:auto;padding:8px 14px 18px}
+.bk-empty{padding:36px 12px;text-align:center;color:var(--tx3);font-size:12px}
+.bk-item{
+  display:flex;align-items:center;gap:11px;padding:11px 12px;
+  border:1px solid var(--bd);border-radius:11px;margin-top:6px;
+  transition:background .15s,border-color .15s;
+}
+.bk-item:hover{background:var(--card2);border-color:var(--bd2)}
+.bk-av{width:34px;height:34px;border-radius:10px;background:var(--re-s);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--re);flex-shrink:0;font-weight:700}
+.bk-info{flex:1;min-width:0}
+.bk-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bk-meta{font-size:10px;color:var(--tx3);font-family:var(--mono);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bk-unblock{
+  padding:6px 11px;border-radius:8px;border:1px solid var(--bd2);background:var(--card2);
+  color:var(--gr);font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0;
+  transition:background .15s,border-color .15s,transform .12s var(--spring);
+}
+.bk-unblock:hover{background:var(--gr-s);border-color:var(--gr);transform:scale(1.05)}
+.bk-unblock:active{transform:scale(.92)}
+.bk-unblock:disabled{opacity:.5;cursor:wait}
+
+/* Backup button in topbar */
+.backup-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;border:1px solid var(--bd2);background:var(--card2);cursor:pointer;flex-shrink:0;position:relative;transition:border-color var(--tr),background var(--tr),transform .15s var(--spring)}
+.backup-btn:hover{border-color:var(--bd3);background:var(--bd2);transform:scale(1.06)}
+.backup-btn:active{transform:scale(.92)}
+.backup-btn svg{width:15px;height:15px;stroke:var(--tx2);transition:stroke var(--tr)}
+.backup-btn:hover svg{stroke:var(--tx)}
+
+/* Backup modal */
+#bkupOvl .mbox{max-width:420px;width:100%;padding:0;overflow:hidden;display:flex;flex-direction:column}
+.bkup-head{padding:20px 22px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:11px}
+.bkup-icon{width:38px;height:38px;border-radius:11px;background:var(--gr-s);display:flex;align-items:center;justify-content:center;color:var(--gr);flex-shrink:0}
+.bkup-icon svg{width:19px;height:19px}
+.bkup-ttl{font-size:16px;font-weight:700;letter-spacing:-.02em}
+.bkup-sub{font-size:11px;color:var(--tx3);margin-top:2px}
+.bkup-body{padding:18px 20px;display:flex;flex-direction:column;gap:16px}
+.bkup-card{background:var(--card2);border:1px solid var(--bd);border-radius:var(--r);padding:15px}
+.bkup-card-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.bkup-card-ic{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bkup-card-ic.exp{background:var(--gr-s);color:var(--gr)}
+.bkup-card-ic.imp{background:var(--bl-s);color:var(--bl)}
+.bkup-card-ic svg{width:16px;height:16px}
+.bkup-card-ttl{font-size:13px;font-weight:600;color:var(--tx)}
+.bkup-card-desc{font-size:11px;color:var(--tx3);line-height:1.5;margin-bottom:12px}
+.bkup-action{width:100%;padding:10px;border-radius:9px;border:none;font-size:12.5px;font-weight:600;font-family:var(--font);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:transform .15s var(--spring),box-shadow .2s,filter .2s}
+.bkup-action svg{width:14px;height:14px}
+.bkup-action.exp{background:linear-gradient(135deg,#059669,#10b981);color:#fff}
+.bkup-action.exp:hover{transform:translateY(-2px);box-shadow:0 8px 22px var(--gr-g)}
+.bkup-action.imp{background:var(--bl-s);border:1px solid rgba(99,102,241,.35);color:var(--bl)}
+.bkup-action.imp:hover{background:var(--bl);color:#fff;transform:translateY(-2px);box-shadow:0 8px 22px rgba(99,102,241,.3)}
+.bkup-action:active{transform:scale(.97)}
+.bkup-action:disabled{opacity:.6;cursor:wait}
+.bkup-stats{display:flex;gap:8px;font-size:10px;color:var(--tx3);font-family:var(--mono);margin-top:2px;flex-wrap:wrap}
+.bkup-stats b{color:var(--gr);font-weight:600}
+.bkup-warn{font-size:10.5px;color:var(--am);background:var(--am-s);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:9px 11px;line-height:1.5;display:flex;gap:7px;align-items:flex-start}
+.bkup-warn svg{width:13px;height:13px;flex-shrink:0;margin-top:1px}
+
+.sec{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--tx3);margin-bottom:9px;display:flex;align-items:center;gap:6px}
+
+.toast{position:fixed;top:70px;right:24px;z-index:200;display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:12px;background:var(--gr-s);border:1px solid rgba(16,185,129,.4);color:var(--gr);font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.2);opacity:0;pointer-events:none;transform:translateY(-10px);transition:opacity .2s var(--ease),transform .25s var(--spring)}
+.toast.on{opacity:1;pointer-events:auto;transform:translateY(0)}
+.toast svg{width:16px;height:16px;flex-shrink:0;stroke:var(--gr)}
+
+.fab{display:none;position:fixed;bottom:20px;right:20px;z-index:30;background:var(--gr);color:#fff;font-weight:600;font-size:12px;border:none;border-radius:50px;padding:12px 20px;cursor:pointer;box-shadow:0 4px 24px var(--gr-g);font-family:var(--font);align-items:center;gap:7px;transition:var(--tr)}
+.fab:hover{transform:translateY(-3px);box-shadow:0 10px 30px var(--gr-g)}
+.fab:active{transform:scale(.95)}
+@media(max-width:700px){.fab{display:flex}}
+
+.drw{display:none;position:fixed;inset:0;z-index:60;background:rgba(5,6,10,.8);backdrop-filter:blur(14px);flex-direction:column;align-items:stretch;justify-content:flex-end}
+.drw.open{display:flex}
+.drw-sheet{background:var(--sur);border-radius:var(--rx) var(--rx) 0 0;max-height:92vh;overflow-y:auto;padding:18px 18px 32px;display:flex;flex-direction:column;gap:18px;position:relative;animation:sheetUp .26s var(--spring);border-top:1px solid var(--bd)}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+.drw-handle{width:38px;height:4px;border-radius:2px;background:var(--bd2);margin:0 auto 4px;flex-shrink:0}
+.drw-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:9px;background:var(--card2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--tx2);font-size:16px;transition:var(--tr)}
+.drw-close:hover{background:var(--bd2);transform:scale(1.06)}
+
+@media(max-width:700px){
+  .app{grid-template-areas:"main";grid-template-columns:1fr}
+  .sidebar{display:none}
+}
+@media(min-width:701px)and(max-width:1000px){:root{--sb:224px}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="sb-head">
+      <div class="logo">
+        <div class="logo-mark">
+          <svg viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8.5 1.5C4.64 1.5 1.5 4.64 1.5 8.5c0 1.19.31 2.32.85 3.29L1.5 15.5l3.79-.84A6.98 6.98 0 008.5 15.5c3.86 0 7-3.14 7-7s-3.14-7-7-7z" fill="white" opacity=".92"/>
+            <path d="M12 10.4c-.2-.1-1.16-.57-1.34-.64-.18-.07-.31-.1-.44.1-.13.2-.51.64-.63.77-.11.13-.23.15-.43.05-.2-.1-.84-.31-1.6-.99-.59-.53-1-.86-1.11-1.36-.11-.2-.01-.3.08-.4.09-.09.2-.23.3-.35.1-.12.13-.2.2-.34.06-.13.03-.25-.01-.35-.05-.1-.44-1.06-.6-1.45-.16-.38-.33-.33-.44-.34h-.37c-.13 0-.34.05-.52.25s-.68.66-.68 1.62.7 1.88.8 2.01c.09.13 1.37 2.09 3.32 2.93.46.2.82.32 1.1.41.46.15.88.12 1.21.07.37-.06 1.14-.47 1.3-.92.16-.45.16-.84.11-.92-.05-.09-.18-.14-.38-.24z" fill="#059669"/>
+          </svg>
+        </div>
+        <div class="logo-txt">WA<em>.</em>Bot <small>Dashboard</small></div>
+      </div>
+      <button class="tt-btn" id="ttBtn" aria-label="Cambiar tema">
+        <div class="tt-track">
+          <div class="tt-icon tt-moon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
+          <div class="tt-icon tt-sun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></div>
+        </div>
+      </button>
+    </div>
+
+    <div class="sb-chip">
+      <div class="pulse" id="stDot"></div>
+      <div class="chip-info"><div class="chip-who" id="stWho">—</div><div class="chip-lbl" id="stLbl">Iniciando…</div></div>
+    </div>
+
+    <div class="busy-toggle" id="busyToggle">
+      <div class="busy-ic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="busy-info">
+        <div class="busy-ttl">Modo ocupado</div>
+        <div class="busy-sub" id="busySub">Respuestas normales</div>
+      </div>
+      <div class="busy-sw"></div>
+    </div>
+
+    <div class="drive-toggle" id="driveToggle">
+      <div class="drive-ic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg>
+      </div>
+      <div class="drive-info">
+        <div class="drive-ttl">Modo actividad</div>
+        <div class="drive-sub" id="driveSub">Desactivado</div>
+      </div>
+      <div class="drive-sw"></div>
+    </div>
+    <div class="drive-activity" id="driveActivity">
+      <div class="drive-activity-lbl">¿Qué estás haciendo?</div>
+      <div class="drive-activity-row">
+        <input type="text" id="driveActivityInput" placeholder="manejando" maxlength="60"/>
+        <button class="drive-activity-save" id="driveActivitySave">OK</button>
+      </div>
+    </div>
+
+    <div class="sb-body">
+      <div>
+        <div class="sec">Estadísticas</div>
+        <div class="sg">
+          <div class="sc"><div class="sc-n" id="nR" style="color:var(--gr)">0</div><div class="sc-l">Respondidos</div></div>
+          <div class="sc"><div class="sc-n" id="nP" style="color:var(--am)">0</div><div class="sc-l">Pendientes</div></div>
+          <div class="sc"><div class="sc-n" id="nS" style="color:var(--bl)">0</div><div class="sc-l">Saltados</div></div>
+          <div class="sc"><div class="sc-n" id="nE" style="color:var(--re)">0</div><div class="sc-l">Errores</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="sec">En espera de IA</div>
+        <div class="ql" id="queueEl"><div class="qe">Sin mensajes pendientes</div></div>
+      </div>
+    </div>
+
+    <div class="sb-foot">
+      <button class="out-btn" id="outBtn">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        Cerrar sesión
+      </button>
+      <div class="sb-cfg"><div id="cfgWait">espera: <span>—</span></div><div id="cfgModel">modelo: <span>—</span></div></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="tb-l">
+        <div class="live"><div class="ldot"></div><div class="ltxt">En vivo</div></div>
+        Mensajes
+      </div>
+      <div class="tb-r">
+        <button class="block-btn" id="blockListBtn" title="Numeros bloqueados" aria-label="Numeros bloqueados">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          <div class="block-btn-badge" id="blockBadge" style="display:none">0</div>
+        </button>
+        <button class="backup-btn" id="backupBtn" title="Respaldo de datos" aria-label="Respaldo de datos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>
+        </button>
+        <button class="clear-btn" id="clearBtn" title="Limpiar feed" aria-label="Limpiar feed">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+        </button>
+        <button class="tt-btn-mob" id="ttBtnMob" aria-label="Cambiar tema">
+          <div class="tt-track">
+            <div class="tt-icon tt-moon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
+            <div class="tt-icon tt-sun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg></div>
+          </div>
+        </button>
+        <div class="tb-divider"></div>
+        <div class="ec" id="evCount">0 eventos</div>
+      </div>
+    </div>
+    <div class="feed" id="feed">
+      <div class="empty"><div class="empty-ic">💬</div><div class="empty-tx">Los mensajes aparecerán<br>aquí en tiempo real</div></div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toastTxt">Feed limpiado</span>
+</div>
+
+<button class="fab" id="fabBtn">
+  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+  Stats
+</button>
+
+<div class="drw" id="drw">
+  <div class="drw-sheet">
+    <div class="drw-handle"></div>
+    <button class="drw-close" id="drwClose">✕</button>
+    <div class="sb-chip">
+      <div class="pulse" id="mDot"></div>
+      <div class="chip-info"><div class="chip-who" id="mWho">—</div><div class="chip-lbl" id="mLbl">Iniciando…</div></div>
+    </div>
+    <div class="busy-toggle" id="busyToggleMob" style="margin:0">
+      <div class="busy-ic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="busy-info">
+        <div class="busy-ttl">Modo ocupado</div>
+        <div class="busy-sub" id="busySubMob">Respuestas normales</div>
+      </div>
+      <div class="busy-sw"></div>
+    </div>
+    <div class="drive-toggle" id="driveToggleMob" style="margin:0">
+      <div class="drive-ic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg>
+      </div>
+      <div class="drive-info">
+        <div class="drive-ttl">Modo actividad</div>
+        <div class="drive-sub" id="driveSubMob">Desactivado</div>
+      </div>
+      <div class="drive-sw"></div>
+    </div>
+    <div class="drive-activity" id="driveActivityMob" style="margin:0">
+      <div class="drive-activity-lbl">¿Qué estás haciendo?</div>
+      <div class="drive-activity-row">
+        <input type="text" id="driveActivityInputMob" placeholder="manejando" maxlength="60"/>
+        <button class="drive-activity-save" id="driveActivitySaveMob">OK</button>
+      </div>
+    </div>
+    <div>
+      <div class="sec">Estadísticas</div>
+      <div class="sg">
+        <div class="sc"><div class="sc-n" id="mnR" style="color:var(--gr)">0</div><div class="sc-l">Respondidos</div></div>
+        <div class="sc"><div class="sc-n" id="mnP" style="color:var(--am)">0</div><div class="sc-l">Pendientes</div></div>
+        <div class="sc"><div class="sc-n" id="mnS" style="color:var(--bl)">0</div><div class="sc-l">Saltados</div></div>
+        <div class="sc"><div class="sc-n" id="mnE" style="color:var(--re)">0</div><div class="sc-l">Errores</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="sec">En espera de IA</div>
+      <div class="ql" id="mqueueEl"><div class="qe">Sin mensajes pendientes</div></div>
+    </div>
+    <button class="out-btn" id="mOutBtn">
+      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      Cerrar sesión
+    </button>
+    <div class="sb-cfg"><div>espera: <span id="mCfgWait" style="color:var(--gr)">—</span></div><div>modelo: <span id="mCfgModel" style="color:var(--gr)">—</span></div></div>
+  </div>
+</div>
+
+<div class="ovl" id="qrOvl">
+  <div class="mbox" style="max-width:340px;width:100%;padding:32px;display:flex;flex-direction:column;align-items:center;gap:18px">
+    <button class="mc" id="qrClose">✕</button>
+    <div class="qr-frame" id="qrImg"></div>
+    <div class="qr-h">Conectar WhatsApp</div>
+    <div class="qr-steps">
+      <div class="qr-s"><div class="qr-n">1</div>Abre WhatsApp en tu iPhone</div>
+      <div class="qr-s"><div class="qr-n">2</div>Configuración → Dispositivos vinculados</div>
+      <div class="qr-s"><div class="qr-n">3</div>Toca "Vincular dispositivo" y escanea</div>
+    </div>
+  </div>
+</div>
+
+<div class="ovl" id="evOvl">
+  <div class="mbox" style="max-width:480px;width:100%">
+    <div class="ev-modal-accent" id="evAccent"></div>
+    <button class="mc" id="evClose" style="top:15px;right:15px">✕</button>
+    <div class="ev-modal-top">
+      <div class="ev-modal-hd">
+        <div class="ev-modal-av" id="evAv"></div>
+        <div>
+          <div class="ev-modal-name" id="evName"></div>
+          <div class="ev-modal-badge" id="evBadge"></div>
+        </div>
+      </div>
+    </div>
+    <div class="ev-modal-body">
+      <div class="ev-modal-msg" id="evMsg"></div>
+      <div class="ev-modal-grid">
+        <div class="ev-modal-cell"><div class="ev-modal-cl">Hora</div><div class="ev-modal-cv" id="evTime"></div></div>
+        <div class="ev-modal-cell"><div class="ev-modal-cl">Tipo de evento</div><div class="ev-modal-cv" id="evType"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ovl" id="cfOvl">
+  <div class="mbox" style="max-width:370px;width:100%;padding:36px 28px;display:flex;flex-direction:column;align-items:center;gap:14px">
+    <button class="mc" id="cfClose">✕</button>
+    <div class="cf-ic">🔌</div>
+    <div class="cf-tt">Cerrar sesión</div>
+    <div class="cf-dc">¿Desconectar WhatsApp del bot? Necesitarás escanear el QR de nuevo para reconectar.</div>
+    <div class="cf-bx">
+      <button class="cbtn cancel" id="cfCancel">Cancelar</button>
+      <button class="cbtn ok" id="cfOk">Sí, cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM BLOCK MODAL -->
+<div class="ovl" id="bkConfirmOvl">
+  <div class="mbox">
+    <button class="mc" id="bkConfirmClose">✕</button>
+    <div class="cf-ic">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+    </div>
+    <div class="cf-tt">Bloquear numero</div>
+    <div class="cf-target" id="bkConfirmName">—</div>
+    <div class="cf-dc">El bot dejara de responder a este chat. Puedes desbloquearlo cuando quieras desde la lista de bloqueados.</div>
+    <div class="cf-bx">
+      <button class="cbtn cancel" id="bkConfirmCancel">Cancelar</button>
+      <button class="cbtn ok" id="bkConfirmOk">Sí, bloquear</button>
+    </div>
+  </div>
+</div>
+
+<!-- BLOCKED LIST MODAL -->
+<div class="ovl" id="bkOvl">
+  <div class="mbox">
+    <button class="mc" id="bkClose">✕</button>
+    <div class="bk-head">
+      <div class="bk-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+      </div>
+      <div>
+        <div class="bk-ttl">Numeros bloqueados</div>
+        <div class="bk-sub">El bot ignorara mensajes de estos chats</div>
+      </div>
+    </div>
+    <div class="bk-body" id="bkList">
+      <div class="bk-empty">Cargando...</div>
+    </div>
+  </div>
+</div>
+
+<!-- BACKUP / RESTORE MODAL -->
+<div class="ovl" id="bkupOvl">
+  <div class="mbox">
+    <button class="mc" id="bkupClose">✕</button>
+    <div class="bkup-head">
+      <div class="bkup-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>
+      </div>
+      <div>
+        <div class="bkup-ttl">Respaldo de datos</div>
+        <div class="bkup-sub">Guarda o restaura tus bloqueados y mensajes</div>
+      </div>
+    </div>
+    <div class="bkup-body">
+      <div class="bkup-card">
+        <div class="bkup-card-top">
+          <div class="bkup-card-ic exp">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </div>
+          <div>
+            <div class="bkup-card-ttl">Descargar respaldo</div>
+            <div class="bkup-stats" id="bkupStats"><span>Cargando datos…</span></div>
+          </div>
+        </div>
+        <div class="bkup-card-desc">Descarga un archivo con todos tus números bloqueados, el historial de mensajes y las estadísticas. Guárdalo en un lugar seguro.</div>
+        <button class="bkup-action exp" id="bkupExport">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Descargar respaldo
+        </button>
+      </div>
+
+      <div class="bkup-card">
+        <div class="bkup-card-top">
+          <div class="bkup-card-ic imp">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <div>
+            <div class="bkup-card-ttl">Restaurar respaldo</div>
+          </div>
+        </div>
+        <div class="bkup-card-desc">Sube un archivo de respaldo que hayas descargado antes para recuperar tus bloqueados y mensajes.</div>
+        <button class="bkup-action imp" id="bkupImport">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Subir respaldo
+        </button>
+        <input type="file" id="bkupFile" accept="application/json,.json" style="display:none"/>
+      </div>
+
+      <div class="bkup-warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Tus datos ya se guardan solos en el volumen de Railway. Este respaldo es una copia extra por si acaso.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var socket = io();
+var evList = [];
+var WMS = parseInt(localStorage.getItem('wabot-waitms') || '0', 10) || 60000;
+
+var ICONS = {incoming:'📨',ai_reply:'🤖',human_reply:'👤',skipped:'⏭️',error:'❌',system:'⚙️'};
+var LBLS  = {starting:'Iniciando…',qr:'Esperando QR',ready:'Conectado',disconnected:'Desconectado'};
+var TC    = {incoming:'var(--bl)',ai_reply:'var(--gr)',human_reply:'var(--pu)',skipped:'var(--tx3)',error:'var(--re)',system:'var(--am)'};
+var TBG   = {incoming:'var(--bl-s)',ai_reply:'var(--gr-s)',human_reply:'var(--pu-s)',skipped:'var(--card2)',error:'var(--re-s)',system:'var(--am-s)'};
+var TL    = {incoming:'Mensaje recibido',ai_reply:'Respuesta de IA',human_reply:'Respuesta humana',skipped:'Omitido por humano',error:'Error del sistema',system:'Evento del sistema'};
+
+function setTheme(t) { document.documentElement.setAttribute('data-theme',t); localStorage.setItem('wabot-theme',t); }
+function toggleTheme() { setTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark'); }
+setTheme(localStorage.getItem('wabot-theme')||'dark');
+document.getElementById('ttBtn').addEventListener('click', toggleTheme);
+
+// ── CONTEXT MODES (busy / driving) — mutually exclusive ──
+// activeMode is 'none' | 'busy' | 'driving'. Only one can be on at a time;
+// the server enforces this too. drivingActivity is the editable label.
+var activeMode = 'none';
+var drivingActivity = 'manejando';
+
+function renderModes() {
+  var busyOn  = (activeMode === 'busy');
+  var driveOn = (activeMode === 'driving');
+  // Busy toggle visuals
+  ['busyToggle','busyToggleMob'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) { if (busyOn) el.classList.add('on'); else el.classList.remove('on'); }
+  });
+  ['busySub','busySubMob'].forEach(function(id){
+    var sub = document.getElementById(id);
+    if (sub) sub.textContent = busyOn ? 'Activo — responde ocupado' : 'Respuestas normales';
+  });
+  // Driving toggle visuals
+  ['driveToggle','driveToggleMob'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) { if (driveOn) el.classList.add('on'); else el.classList.remove('on'); }
+  });
+  ['driveSub','driveSubMob'].forEach(function(id){
+    var sub = document.getElementById(id);
+    if (sub) sub.textContent = driveOn ? ('Activo — ' + drivingActivity) : 'Desactivado';
+  });
+  // Show/hide the activity input (only when driving mode is on)
+  ['driveActivity','driveActivityMob'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) { if (driveOn) el.classList.add('show'); else el.classList.remove('show'); }
+  });
+  // Keep activity inputs in sync with current value
+  ['driveActivityInput','driveActivityInputMob'].forEach(function(id){
+    var inp = document.getElementById(id);
+    if (inp && document.activeElement !== inp) inp.value = drivingActivity;
+  });
+}
+
+function setMode(mode, activity) {
+  var prev = activeMode;
+  var prevAct = drivingActivity;
+  // optimistic UI
+  activeMode = mode;
+  if (mode === 'driving' && activity) drivingActivity = activity;
+  renderModes();
+  var body = { mode: mode };
+  if (mode === 'driving') body.activity = drivingActivity;
+  fetch('/api/mode', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  }).then(function(r){return r.json();})
+    .then(function(d) {
+      if (d.ok) {
+        activeMode = d.activeMode;
+        if (d.drivingActivity) drivingActivity = d.drivingActivity;
+        renderModes();
+        if (d.activeMode === 'busy') showToast('Modo ocupado activado');
+        else if (d.activeMode === 'driving') showToast('Modo actividad: ' + drivingActivity);
+        else showToast('Modos desactivados');
+      } else {
+        activeMode = prev; drivingActivity = prevAct; renderModes();
+        showToast(d.error || 'No se pudo cambiar');
+      }
+    })
+    .catch(function(){
+      activeMode = prev; drivingActivity = prevAct; renderModes();
+      showToast('Error de conexion');
+    });
+}
+
+// Toggle busy: if already busy → turn off (none); else → busy (auto-disables driving)
+function toggleBusy() { setMode(activeMode === 'busy' ? 'none' : 'busy'); }
+// Toggle driving: if already driving → turn off (none); else → driving (auto-disables busy)
+function toggleDrive() {
+  if (activeMode === 'driving') { setMode('none'); }
+  else {
+    var inp = document.getElementById('driveActivityInput') || document.getElementById('driveActivityInputMob');
+    var act = (inp && inp.value.trim()) ? inp.value.trim() : drivingActivity;
+    setMode('driving', act);
+  }
+}
+function saveActivity() {
+  var inp = document.getElementById('driveActivityInput');
+  var inpMob = document.getElementById('driveActivityInputMob');
+  var val = '';
+  if (inp && inp.value.trim()) val = inp.value.trim();
+  else if (inpMob && inpMob.value.trim()) val = inpMob.value.trim();
+  if (!val) { showToast('Escribe una actividad'); return; }
+  drivingActivity = val;
+  // If driving is already on, update it live; otherwise just store for next activation
+  if (activeMode === 'driving') setMode('driving', val);
+  else { renderModes(); showToast('Actividad guardada: ' + val); }
+}
+
+document.getElementById('busyToggle').addEventListener('click', toggleBusy);
+var busyMobEl = document.getElementById('busyToggleMob');
+if (busyMobEl) busyMobEl.addEventListener('click', toggleBusy);
+document.getElementById('driveToggle').addEventListener('click', toggleDrive);
+var driveMobEl = document.getElementById('driveToggleMob');
+if (driveMobEl) driveMobEl.addEventListener('click', toggleDrive);
+document.getElementById('driveActivitySave').addEventListener('click', saveActivity);
+var driveSaveMob = document.getElementById('driveActivitySaveMob');
+if (driveSaveMob) driveSaveMob.addEventListener('click', saveActivity);
+// Enter key in activity input saves it
+['driveActivityInput','driveActivityInputMob'].forEach(function(id){
+  var inp = document.getElementById(id);
+  if (inp) inp.addEventListener('keydown', function(e){ if (e.key === 'Enter') saveActivity(); });
+});
+document.getElementById('ttBtnMob').addEventListener('click', toggleTheme);
+
+document.getElementById('fabBtn').addEventListener('click',function(){ document.getElementById('drw').classList.add('open'); });
+document.getElementById('drwClose').addEventListener('click',function(){ document.getElementById('drw').classList.remove('open'); });
+document.getElementById('drw').addEventListener('click',function(e){ if(e.target===this) this.classList.remove('open'); });
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  var tx = document.getElementById('toastTxt');
+  if (tx) tx.textContent = msg;
+  t.classList.add('on');
+  clearTimeout(showToast._h);
+  showToast._h = setTimeout(function() { t.classList.remove('on'); }, 2200);
+}
+
+// Timestamp of last clear — events older than this are filtered out
+var lastClearTs = parseInt(localStorage.getItem('wabot-cleared-ts') || '0', 10);
+
+document.getElementById('clearBtn').addEventListener('click', function(e) {
+  e.stopPropagation();
+  e.preventDefault();
+  if (!evList.length) { showToast('Feed ya esta vacio'); return; }
+  // Clear LOCAL state immediately for snappy UX
+  evList = [];
+  renderFeed();
+  // Tell server to clear its history. The server responds with the authoritative
+  // timestamp which we use as lastClearTs. Any event with ts > this passes through.
+  fetch('/api/clear-feed', { method: 'POST' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d && d.ts) {
+        lastClearTs = d.ts;
+        localStorage.setItem('wabot-cleared-ts', String(lastClearTs));
+      } else {
+        lastClearTs = Date.now();
+        localStorage.setItem('wabot-cleared-ts', String(lastClearTs));
+      }
+    })
+    .catch(function() {
+      lastClearTs = Date.now();
+      localStorage.setItem('wabot-cleared-ts', String(lastClearTs));
+    });
+  var btn = this;
+  btn.classList.add('success');
+  showToast('Feed limpiado');
+  setTimeout(function() { btn.classList.remove('success'); }, 800);
+});
+
+// Filter helper: only keep events newer than the last clear
+function filterCleared(list) {
+  if (!lastClearTs) return list;
+  return list.filter(function(e) { return (e.ts || 0) > lastClearTs; });
+}
+
+function openOvl(id)  { document.getElementById(id).classList.add('on'); }
+function closeOvl(id) { document.getElementById(id).classList.remove('on'); }
+
+['cfClose','cfCancel'].forEach(function(id){ document.getElementById(id).addEventListener('click',function(){ closeOvl('cfOvl'); }); });
+document.getElementById('cfOk').addEventListener('click',function(){
+  closeOvl('cfOvl');
+  fetch('/api/logout',{method:'POST'}).catch(function(){});
+});
+document.getElementById('cfOvl').addEventListener('click',function(e){ if(e.target===this) closeOvl('cfOvl'); });
+document.getElementById('evClose').addEventListener('click',function(){ closeOvl('evOvl'); });
+document.getElementById('evOvl').addEventListener('click',function(e){ if(e.target===this) closeOvl('evOvl'); });
+document.getElementById('qrClose').addEventListener('click',function(){ closeOvl('qrOvl'); });
+
+function doLogout() { openOvl('cfOvl'); }
+document.getElementById('outBtn').addEventListener('click', doLogout);
+document.getElementById('mOutBtn').addEventListener('click', doLogout);
+
+function showEv(ev) {
+  var col = TC[ev.type]||'var(--tx3)', bg = TBG[ev.type]||'var(--card2)';
+  document.getElementById('evAccent').style.background = col;
+  document.getElementById('evAv').textContent = ICONS[ev.type]||'•';
+  document.getElementById('evAv').style.background = bg;
+  document.getElementById('evName').textContent = ev.name||'—';
+  document.getElementById('evName').style.color = col;
+  var badge = document.getElementById('evBadge');
+  badge.textContent = TL[ev.type]||ev.type;
+  badge.style.cssText = 'color:'+col+';background:'+bg+';border:1px solid '+col+'40;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:2px 9px;border-radius:20px;display:inline-flex';
+  document.getElementById('evMsg').textContent = ev.text||'(sin contenido)';
+  document.getElementById('evTime').textContent = new Date(ev.ts).toLocaleString('es',{hour:'2-digit',minute:'2-digit',second:'2-digit',day:'2-digit',month:'short'});
+  document.getElementById('evType').textContent = ev.type;
+  openOvl('evOvl');
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function tFmt(ts){ return new Date(ts).toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+function msStr(rem,wMs){ if(rem<=0) return '0s'; var s=Math.ceil(rem/1000),m=Math.floor(s/60),ss=s%60; return m>0?m+':'+String(ss).padStart(2,'0'):ss+'s'; }
+// Color logic based on thirds of the total wait time (not hardcoded).
+// safe = green (>2/3 remaining), warn = yellow (1/3 to 2/3), crit = red (<1/3)
+function colorStateOf(rem, wMs) {
+  if (wMs <= 0) return 'safe';
+  var ratio = rem / wMs;
+  if (ratio <= 1/3) return 'crit';
+  if (ratio <= 2/3) return 'warn';
+  return 'safe';
+}
+function bCol(rem, wMs){
+  var st = colorStateOf(rem, wMs);
+  if (st === 'crit') return 'var(--re)';
+  if (st === 'warn') return 'var(--am)';
+  return 'var(--gr)';
+}
+
+function applyStatus(st, who) {
+  ['stDot','mDot'].forEach(function(id){ var e=document.getElementById(id); if(e) e.className='pulse '+st; });
+  ['stLbl','mLbl'].forEach(function(id){ var e=document.getElementById(id); if(e) e.textContent=LBLS[st]||st; });
+  ['stWho','mWho'].forEach(function(id){ var e=document.getElementById(id); if(e) e.textContent=who||'—'; });
+}
+
+function handleQR(st, qr) {
+  var img = document.getElementById('qrImg');
+  if (st==='qr' && qr) {
+    img.innerHTML = '<img src="'+qr+'" alt="QR" style="display:block;width:190px;height:190px"/>';
+    openOvl('qrOvl');
+  } else {
+    closeOvl('qrOvl');
+    img.innerHTML = '';
+  }
+}
+
+function renderFeed() {
+  var feed = document.getElementById('feed');
+  document.getElementById('evCount').textContent = evList.length+' eventos';
+  if (!evList.length) {
+    feed.innerHTML = '<div class="empty"><div class="empty-ic">💬</div><div class="empty-tx">Los mensajes aparecerán<br>aquí en tiempo real</div></div>';
+    return;
+  }
+  feed.innerHTML = evList.slice(0,120).map(function(e,i){
+    var blockBtn = '';
+    // Only show block button for events tied to a real chat (incoming, ai_reply, etc),
+    // not for system events without a chatId
+    if (e.chatId && e.type !== 'system') {
+      blockBtn = '<button class="ev-block-btn" data-chatid="'+esc(e.chatId)+'" data-name="'+esc(e.name)+'" title="Bloquear este numero">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>' +
+        '</button>';
+    }
+    return '<div class="ev '+e.type+'" data-i="'+i+'">' +
+      '<div class="ev-av">'+(ICONS[e.type]||'•')+'</div>' +
+      '<div><div class="ev-sender" style="display:flex;align-items:center">'+esc(e.name)+blockBtn+'</div><div class="ev-txt">'+esc(e.text)+'</div></div>' +
+      '<div class="ev-side"><div class="ev-ts">'+tFmt(e.ts)+'</div><div class="ev-arr">›</div></div>' +
+      '</div>';
+  }).join('');
+  feed.querySelectorAll('.ev[data-i]').forEach(function(el){
+    el.addEventListener('click',function(ev){
+      // Don't open modal if user clicked the block button
+      if (ev.target.closest('.ev-block-btn')) return;
+      var idx=parseInt(this.dataset.i,10); if(evList[idx]) showEv(evList[idx]);
+    });
+  });
+  // Attach block button handlers — opens custom confirm modal
+  feed.querySelectorAll('.ev-block-btn').forEach(function(btn) {
+    if (btn._bound) return;
+    btn._bound = true;
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var chatId = this.dataset.chatid;
+      var name   = this.dataset.name;
+      if (!chatId) return;
+      askBlockConfirm(chatId, name, this);
+    });
+  });
+}
+
+function qHtml(pend, wMs) {
+  if (!pend.length) return '<div class="qe">Sin mensajes pendientes</div>';
+  var receivedAt = Date.now();
+  return pend.map(function(p){
+    var rem = (typeof p.remaining === 'number') ? p.remaining : Math.max(0, (p.timerEnd || 0) - receivedAt);
+    rem = Math.max(0, rem);
+    var pct  = wMs > 0 ? Math.min(100, ((wMs - rem) / wMs) * 100) : 0;
+    var state = colorStateOf(rem, wMs);
+    var stateCls = (state === 'safe') ? '' : (' ' + state);
+    var tStateCls = (state === 'safe') ? '' : (' ' + state);
+    var cid  = esc(p.chatId || '');
+    return '<div class="qc'+stateCls+'" data-rem="'+rem+'" data-received="'+receivedAt+'" data-wms="'+wMs+'">' +
+      '<div class="qr2">' +
+        '<div class="qn">'+esc(p.name)+'</div>' +
+        '<div class="qright"><div class="qt'+tStateCls+'">'+msStr(rem,wMs)+'</div>' +
+        '<button class="qcancel" data-chatid="'+cid+'" title="Cancelar respuesta IA" aria-label="Cancelar respuesta IA">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+        '</button></div>' +
+      '</div>' +
+      '<div class="qm">'+esc(p.lastMsg)+'</div>' +
+      '<div class="qtr"><div class="qf" style="width:'+pct+'%;background:'+bCol(rem,wMs)+'"></div></div>' +
+      '</div>';
+  }).join('');
+}
+
+function attachCancelHandlers() {
+  document.querySelectorAll('.qcancel').forEach(function(btn) {
+    if (btn._bound) return;
+    btn._bound = true;
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var chatId = this.dataset.chatid;
+      if (!chatId) return;
+      var b = this;
+      b.disabled = true;
+      b.classList.add('loading');
+      fetch('/api/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatId: chatId })
+      }).then(function(r){return r.json();})
+        .then(function(d) {
+          if (d.ok) showToast('Respuesta cancelada');
+          else {
+            showToast(d.error || 'No se pudo cancelar');
+            b.disabled = false; b.classList.remove('loading');
+          }
+        })
+        .catch(function() {
+          showToast('Error de conexion');
+          b.disabled = false; b.classList.remove('loading');
+        });
+    });
+  });
+}
+
+// Track which chat IDs are currently rendered so we only rebuild the DOM
+// when the actual SET of pending chats changes (chat added/removed/reordered).
+// Without this, the 500ms state broadcast re-renders cards every cycle and the
+// CSS slideIn animation retriggers, causing the visible "blink" effect.
+var lastPendingKey = '';
+function pendingKey(pend) {
+  return pend.map(function(p){ return p.chatId; }).join('|');
+}
+function renderQ(pend, wMs) {
+  ['nP','mnP'].forEach(function(id){ var e=document.getElementById(id); if(e) e.textContent=pend.length; });
+  var key = pendingKey(pend);
+  if (key === lastPendingKey) {
+    // Same chats as last render — let tick() handle the countdown updates.
+    // Just refresh the "remaining" and "received" dataset on each card so the
+    // local countdown stays in sync with the server's authoritative value.
+    var receivedAt = Date.now();
+    document.querySelectorAll('.qc[data-rem]').forEach(function(c, idx) {
+      var p = pend[idx];
+      if (!p) return;
+      var rem = (typeof p.remaining === 'number') ? p.remaining : Math.max(0, (p.timerEnd || 0) - receivedAt);
+      c.dataset.rem = Math.max(0, rem);
+      c.dataset.received = receivedAt;
+      c.dataset.wms = wMs;
+    });
+    return;
+  }
+  // Set of pending chats changed — rebuild the DOM
+  lastPendingKey = key;
+  var h = qHtml(pend, wMs);
+  ['queueEl','mqueueEl'].forEach(function(id){ var e=document.getElementById(id); if(e) e.innerHTML=h; });
+  attachCancelHandlers();
+}
+
+function tick() {
+  var now = Date.now();
+  document.querySelectorAll('.qc[data-rem]').forEach(function(c){
+    var baseRem    = parseInt(c.dataset.rem, 10);
+    var receivedAt = parseInt(c.dataset.received, 10);
+    var wMs        = parseInt(c.dataset.wms, 10) || WMS || 60000;
+    if (isNaN(baseRem) || isNaN(receivedAt)) return;
+    var elapsed = now - receivedAt;
+    var rem     = Math.max(0, baseRem - elapsed);
+    var pct     = wMs > 0 ? Math.min(100, ((wMs - rem) / wMs) * 100) : 0;
+    var state   = colorStateOf(rem, wMs);
+    var stateCls = (state === 'safe') ? '' : (' ' + state);
+    var tEl = c.querySelector('.qt'), bEl = c.querySelector('.qf');
+    if (tEl) { tEl.textContent = msStr(rem, wMs); tEl.className = 'qt' + stateCls; }
+    if (bEl) { bEl.style.width = pct + '%'; bEl.style.background = bCol(rem, wMs); }
+    c.className = 'qc' + stateCls;
+  });
+}
+setInterval(tick, 250);
+
+function applyState(d) {
+  applyStatus(d.botStatus, d.who);
+  handleQR(d.botStatus, d.qr);
+  var st = d.stats||{};
+  ['nR','mnR'].forEach(function(id){ var e=document.getElementById(id); if(e) e.textContent=st.replied||0; });
+  ['nS','mnS'].forEach(function(id){ var e=document.getElementById(id); if(e) e.textContent=st.skipped||0; });
+  ['nE','mnE'].forEach(function(id){ var e=document.getElementById(id); if(e) e.textContent=st.errors||0; });
+  // Sync context modes with server state
+  if (typeof d.activeMode === 'string') {
+    activeMode = d.activeMode;
+    if (d.drivingActivity) drivingActivity = d.drivingActivity;
+    renderModes();
+  }
+  // Update blocked count badge in topbar
+  var badge = document.getElementById('blockBadge');
+  if (badge) {
+    var cnt = d.blockedCount || 0;
+    if (cnt > 0) { badge.style.display = 'flex'; badge.textContent = cnt > 99 ? '99+' : cnt; }
+    else badge.style.display = 'none';
+  }
+  if (d.waitMs && d.waitMs !== WMS) {
+    WMS = d.waitMs;
+    localStorage.setItem('wabot-waitms', String(WMS));
+  }
+  renderQ(d.pending||[], WMS);
+  if(d.waitMin){
+    var w=document.getElementById('cfgWait'); if(w) w.innerHTML='espera: <span>'+d.waitMin+'min</span>';
+    var mw=document.getElementById('mCfgWait'); if(mw) mw.textContent=d.waitMin+'min';
+  }
+  if(d.model){
+    var m=document.getElementById('cfgModel'); if(m) m.innerHTML='modelo: <span>'+d.model+'</span>';
+    var mm=document.getElementById('mCfgModel'); if(mm) mm.textContent=d.model;
+  }
+}
+
+// ─── BLOCK LIST UI ──────────────────────────────────────────────
+// State for the confirm-block modal
+var blockConfirmCtx = { chatId: null, name: null, btn: null };
+function askBlockConfirm(chatId, name, btn) {
+  blockConfirmCtx = { chatId: chatId, name: name, btn: btn };
+  document.getElementById('bkConfirmName').textContent = name || chatId;
+  openOvl('bkConfirmOvl');
+}
+function closeBlockConfirm() {
+  closeOvl('bkConfirmOvl');
+  blockConfirmCtx = { chatId: null, name: null, btn: null };
+}
+function doBlock() {
+  var ctx = blockConfirmCtx;
+  closeBlockConfirm();
+  if (!ctx.chatId) return;
+  if (ctx.btn) ctx.btn.disabled = true;
+  fetch('/api/block', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chatId: ctx.chatId, name: ctx.name })
+  }).then(function(r){return r.json();})
+    .then(function(d) {
+      if (d.ok) showToast('Numero bloqueado');
+      else {
+        showToast(d.error || 'No se pudo bloquear');
+        if (ctx.btn) ctx.btn.disabled = false;
+      }
+    })
+    .catch(function() {
+      showToast('Error de conexion');
+      if (ctx.btn) ctx.btn.disabled = false;
+    });
+}
+document.getElementById('bkConfirmClose').addEventListener('click', closeBlockConfirm);
+document.getElementById('bkConfirmCancel').addEventListener('click', closeBlockConfirm);
+document.getElementById('bkConfirmOk').addEventListener('click', doBlock);
+document.getElementById('bkConfirmOvl').addEventListener('click', function(e) {
+  if (e.target === this) closeBlockConfirm();
+});
+
+function openBlockList() {
+  openOvl('bkOvl');
+  var listEl = document.getElementById('bkList');
+  listEl.innerHTML = '<div class="bk-empty">Cargando...</div>';
+  fetch('/api/blocked').then(function(r){return r.json();}).then(function(d) {
+    var list = d.blocked || [];
+    if (!list.length) {
+      listEl.innerHTML = '<div class="bk-empty">No hay numeros bloqueados.<br>Bloquea uno desde el icono al pasar el mouse sobre un mensaje.</div>';
+      return;
+    }
+    listEl.innerHTML = list.map(function(item) {
+      var initial = (item.name || '?').charAt(0).toUpperCase();
+      var phone = (item.chatId || '').split('@')[0];
+      var dt = item.blockedAt ? new Date(item.blockedAt).toLocaleString('es', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+      return '<div class="bk-item">' +
+        '<div class="bk-av">' + esc(initial) + '</div>' +
+        '<div class="bk-info">' +
+          '<div class="bk-name">' + esc(item.name) + '</div>' +
+          '<div class="bk-meta">' + esc(phone) + (dt ? ' • ' + dt : '') + '</div>' +
+        '</div>' +
+        '<button class="bk-unblock" data-chatid="' + esc(item.chatId) + '">Desbloquear</button>' +
+        '</div>';
+    }).join('');
+    listEl.querySelectorAll('.bk-unblock').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var chatId = this.dataset.chatid;
+        var b = this;
+        b.disabled = true; b.textContent = 'Desbloqueando...';
+        fetch('/api/unblock', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chatId: chatId })
+        }).then(function(r){return r.json();})
+          .then(function(d) {
+            if (d.ok) { showToast('Desbloqueado'); openBlockList(); }
+            else { showToast(d.error || 'Error'); b.disabled = false; b.textContent = 'Desbloquear'; }
+          })
+          .catch(function(){ showToast('Error de conexion'); b.disabled = false; b.textContent = 'Desbloquear'; });
+      });
+    });
+  }).catch(function() {
+    listEl.innerHTML = '<div class="bk-empty">Error al cargar la lista.</div>';
+  });
+}
+document.getElementById('blockListBtn').addEventListener('click', openBlockList);
+document.getElementById('bkClose').addEventListener('click', function(){ closeOvl('bkOvl'); });
+document.getElementById('bkOvl').addEventListener('click', function(e) {
+  if (e.target === this) closeOvl('bkOvl');
+});
+
+// ─── BACKUP / RESTORE ───────────────────────────────────────────
+function openBackup() {
+  openOvl('bkupOvl');
+  // Load current data counts to show in the modal
+  var statsEl = document.getElementById('bkupStats');
+  Promise.all([
+    fetch('/api/blocked').then(function(r){return r.json();}).catch(function(){return {blocked:[]};}),
+    fetch('/api/events').then(function(r){return r.json();}).catch(function(){return [];}),
+    fetch('/api/status').then(function(r){return r.json();}).catch(function(){return {stats:{}};})
+  ]).then(function(res) {
+    var nBlocked = (res[0].blocked || []).length;
+    var nEvents = (res[1] || []).length;
+    var st = res[2].stats || {};
+    statsEl.innerHTML = '<span><b>' + nBlocked + '</b> bloqueados</span>' +
+                        '<span><b>' + nEvents + '</b> mensajes</span>' +
+                        '<span><b>' + (st.replied||0) + '</b> respondidos</span>';
+  }).catch(function(){ statsEl.innerHTML = '<span>Datos listos para respaldar</span>'; });
+}
+
+document.getElementById('backupBtn').addEventListener('click', openBackup);
+document.getElementById('bkupClose').addEventListener('click', function(){ closeOvl('bkupOvl'); });
+document.getElementById('bkupOvl').addEventListener('click', function(e) {
+  if (e.target === this) closeOvl('bkupOvl');
+});
+
+// Export: fetch the backup and trigger a browser download
+document.getElementById('bkupExport').addEventListener('click', function() {
+  var btn = this;
+  btn.disabled = true;
+  fetch('/api/export')
+    .then(function(r) {
+      if (!r.ok) throw new Error('export failed');
+      return r.blob();
+    })
+    .then(function(blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      var d = new Date();
+      var stamp = d.getFullYear() + ('0'+(d.getMonth()+1)).slice(-2) + ('0'+d.getDate()).slice(-2) + '-' + ('0'+d.getHours()).slice(-2) + ('0'+d.getMinutes()).slice(-2);
+      a.download = 'wa-bot-respaldo-' + stamp + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Respaldo descargado');
+      btn.disabled = false;
+    })
+    .catch(function() { showToast('No se pudo descargar'); btn.disabled = false; });
+});
+
+// Import: open file picker
+document.getElementById('bkupImport').addEventListener('click', function() {
+  document.getElementById('bkupFile').click();
+});
+document.getElementById('bkupFile').addEventListener('change', function(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var data;
+    try { data = JSON.parse(ev.target.result); }
+    catch(err) { showToast('Archivo inválido (no es JSON)'); return; }
+    if (!data || (!data.blocked && !data.events)) {
+      showToast('Este archivo no es un respaldo válido');
+      return;
+    }
+    var n = (data.blocked||[]).length;
+    if (!confirm('¿Restaurar este respaldo?\\n\\n' + n + ' bloqueados y ' + (data.events||[]).length + ' mensajes se agregarán a tus datos actuales.')) {
+      document.getElementById('bkupFile').value = '';
+      return;
+    }
+    fetch('/api/import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).then(function(r){return r.json();})
+      .then(function(res) {
+        if (res.ok) {
+          showToast('Restaurado: ' + res.imported.blocked + ' bloqueados, ' + res.imported.events + ' mensajes');
+          openBackup(); // refresh counts
+          fetch('/api/events').then(function(r){return r.json();}).then(function(d){ evList = filterCleared(d||[]); renderFeed(); }).catch(function(){});
+        } else {
+          showToast(res.error || 'Error al restaurar');
+        }
+      })
+      .catch(function(){ showToast('Error de conexión'); });
+    document.getElementById('bkupFile').value = '';
+  };
+  reader.readAsText(file);
+});
+
+socket.on('state', applyState);
+// Server told us the feed was cleared — wipe local state too
+socket.on('feed-cleared', function(payload) {
+  // Use server-provided timestamp so all clients agree on the cutoff.
+  // Without this, a slow socket emit could overwrite a more-recent lastClearTs
+  // and accidentally filter out events that came AFTER the clear.
+  evList = [];
+  var ts = (payload && payload.ts) ? payload.ts : Date.now();
+  // Only update if the new ts is NEWER than current (prevent regressions)
+  if (ts > lastClearTs) {
+    lastClearTs = ts;
+    localStorage.setItem('wabot-cleared-ts', String(lastClearTs));
+  }
+  renderFeed();
+});
+
+// New event arriving live — ignore if older than last clear
+socket.on('ev', function(e){
+  if (lastClearTs && (e.ts || 0) <= lastClearTs) return;
+  evList.unshift(e);
+  if(evList.length>300) evList.pop();
+  renderFeed();
+});
+
+// Only fetch full event history on FIRST connect, not on reconnects.
+// On reconnect we already have the live events from socket.on('ev').
+var firstConnect = true;
+socket.on('connect', function(){
+  if (firstConnect) {
+    firstConnect = false;
+    fetch('/api/events').then(function(r){return r.json();}).then(function(d){
+      // Filter out events that were cleared
+      evList = filterCleared(d || []);
+      renderFeed();
+    }).catch(function(){});
+  }
+  fetch('/api/status').then(function(r){return r.json();}).then(applyState).catch(function(){});
+});
+</script>
+</body>
+</html>

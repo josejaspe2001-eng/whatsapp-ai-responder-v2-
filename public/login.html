@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WA Bot — Acceso</title>
+<link rel="icon" href="/favicon.ico">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08090c;--sur:#0e1015;--card2:#1a1d27;
+  --bd:rgba(255,255,255,.055);--bd2:rgba(255,255,255,.1);
+  --tx:#eef2f7;--tx2:#8b95a8;--tx3:#4a5368;
+  --gr:#10b981;--gr-s:rgba(16,185,129,.15);--gr-g:rgba(16,185,129,.3);
+  --re:#f43f5e;
+  --r:12px;--rl:18px;
+  --ease:cubic-bezier(.4,0,.2,1);--spring:cubic-bezier(.34,1.56,.64,1);
+  --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--tx);-webkit-font-smoothing:antialiased}
+body{display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(1200px 400px at 20% 0%, var(--gr-s), transparent 60%),radial-gradient(800px 300px at 80% 100%, rgba(99,102,241,.08), transparent 60%),var(--bg)}
+.card{background:var(--sur);border:1px solid var(--bd2);border-radius:var(--rl);padding:40px 32px;width:100%;max-width:380px;box-shadow:0 24px 60px rgba(0,0,0,.4);display:flex;flex-direction:column;align-items:center;gap:18px;animation:popIn .35s var(--spring)}
+@keyframes popIn{from{opacity:0;transform:scale(.92) translateY(20px)}to{opacity:1;transform:none}}
+.logo-mark{width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,#059669 0%,#10b981 50%,#34d399 100%);display:flex;align-items:center;justify-content:center;box-shadow:0 0 30px var(--gr-g);animation:markPulse 3s ease-in-out infinite;position:relative;overflow:hidden}
+.logo-mark::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.2),transparent)}
+@keyframes markPulse{0%,100%{box-shadow:0 0 30px var(--gr-g)}50%{box-shadow:0 0 45px var(--gr-g)}}
+.logo-mark svg{width:30px;height:30px;position:relative;z-index:1}
+h1{font-size:22px;font-weight:700;letter-spacing:-.03em;text-align:center}
+.sub{font-size:13px;color:var(--tx2);text-align:center;margin-top:-12px;line-height:1.5}
+.form{width:100%;display:flex;flex-direction:column;gap:12px;margin-top:8px}
+.field input{width:100%;padding:14px 16px;font-size:16px;font-family:var(--mono);letter-spacing:.3em;text-align:center;background:var(--card2);border:1px solid var(--bd2);border-radius:var(--r);color:var(--tx);outline:none;transition:border-color .2s,background .2s,box-shadow .2s}
+.field input::placeholder{letter-spacing:.05em;color:var(--tx3);font-family:var(--font);font-size:13px}
+.field input:focus{border-color:var(--gr);box-shadow:0 0 0 3px var(--gr-s)}
+.field input.err{border-color:var(--re);animation:shake .3s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
+.btn{width:100%;padding:13px;border-radius:var(--r);border:none;background:linear-gradient(135deg,#059669,#10b981);color:#fff;font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer;transition:transform .15s var(--spring),box-shadow .2s,filter .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 24px var(--gr-g)}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.6;cursor:wait}
+.spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
+.btn.loading .spinner{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.err-msg{color:var(--re);font-size:12px;text-align:center;min-height:16px;font-weight:500}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo-mark">
+    <svg viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8.5 1.5C4.64 1.5 1.5 4.64 1.5 8.5c0 1.19.31 2.32.85 3.29L1.5 15.5l3.79-.84A6.98 6.98 0 008.5 15.5c3.86 0 7-3.14 7-7s-3.14-7-7-7z" fill="white" opacity=".92"/>
+      <path d="M12 10.4c-.2-.1-1.16-.57-1.34-.64-.18-.07-.31-.1-.44.1-.13.2-.51.64-.63.77-.11.13-.23.15-.43.05-.2-.1-.84-.31-1.6-.99-.59-.53-1-.86-1.11-1.36-.11-.2-.01-.3.08-.4.09-.09.2-.23.3-.35.1-.12.13-.2.2-.34.06-.13.03-.25-.01-.35-.05-.1-.44-1.06-.6-1.45-.16-.38-.33-.33-.44-.34h-.37c-.13 0-.34.05-.52.25s-.68.66-.68 1.62.7 1.88.8 2.01c.09.13 1.37 2.09 3.32 2.93.46.2.82.32 1.1.41.46.15.88.12 1.21.07.37-.06 1.14-.47 1.3-.92.16-.45.16-.84.11-.92-.05-.09-.18-.14-.38-.24z" fill="#059669"/>
+    </svg>
+  </div>
+  <h1>WA Bot Dashboard</h1>
+  <div class="sub">Ingresa el PIN para acceder al panel</div>
+  <div class="form">
+    <div class="field">
+      <input id="pin" type="password" inputmode="numeric" autocomplete="current-password" placeholder="••••••" autofocus/>
+    </div>
+    <div class="err-msg" id="errMsg"></div>
+    <button class="btn" id="loginBtn" type="button">
+      <div class="spinner"></div>
+      <span>Entrar</span>
+    </button>
+  </div>
+</div>
+<script>
+var pinInput = document.getElementById('pin');
+var btn = document.getElementById('loginBtn');
+var errMsg = document.getElementById('errMsg');
+function submitPin() {
+  var pin = pinInput.value;
+  if (!pin) { errMsg.textContent = 'Ingresa el PIN'; pinInput.classList.add('err'); return; }
+  errMsg.textContent = '';
+  pinInput.classList.remove('err');
+  btn.classList.add('loading');
+  btn.disabled = true;
+  fetch('/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({pin:pin}) })
+    .then(function(r){return r.json();})
+    .then(function(d) {
+      if (d.ok) location.href = '/';
+      else {
+        btn.classList.remove('loading'); btn.disabled = false;
+        errMsg.textContent = d.error || 'PIN incorrecto';
+        pinInput.classList.add('err'); pinInput.value = ''; pinInput.focus();
+      }
+    })
+    .catch(function(){
+      btn.classList.remove('loading'); btn.disabled = false;
+      errMsg.textContent = 'Error de conexion';
+    });
+}
+btn.addEventListener('click', submitPin);
+pinInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') submitPin();
+  if (pinInput.classList.contains('err')) pinInput.classList.remove('err');
+});
+</script>
+</body>
+</html>
